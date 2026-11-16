@@ -91,3 +91,85 @@
 * **การใช้ตัวแปร volatile:** ตัวแปรที่ใช้งานร่วมกันระหว่างลูปหลักและฟังก์ชัน Interrupt (ISR) ต้องประกาศด้วยคำสั่ง `volatile` เสมอ และห้ามทำฟังก์ชันบล็อกหรือจองหน่วยความจำ (`malloc`) ภายใน ISR
 * **การจัดการหน่วยความจำ:** หลีกเลี่ยงการใช้ `malloc` พร่ำเพรื่อเพื่อป้องกันปัญหาหน่วยความจำแหว่ง (Fragmentation) และควรใช้คีย์เวิร์ด `const` เพื่อเก็บข้อมูลคงที่ไว้ใน Flash แทนการเปลือง RAM
 * **การประยุกต์ใช้งาน FreeRTOS:** สามารถแบ่งแยกลักษณะงาน (Task) ไปรันบนหน่วยประมวลผลทั้งสองแกนของ ESP32-S3 (Core 0 และ Core 1) พร้อมใช้เครื่องมือสื่อสารระหว่าง Task เช่น Queue, Semaphore, Mutex และ Task Notification
+
+นี่คือสรุปเนื้อหาคู่มือ **การติดตั้งและตรวจสอบการทำงานของ ESP-IDF (เวอร์ชัน v6.1 สำหรับ ESP32-S3)** เป็นภาษาไทยแบบเข้าใจง่ายและกระชับครับ
+
+
+# สรุปใจความสำคัญ: ND01 — Week 03: ESP-IDF Setup (Windows, macOS, Linux) and ESP32-S3 Hello World
+### 📌 ภาพรวมของคู่มือ
+คู่มือนี้ใช้สำหรับติดตั้ง **ESP-IDF v6.1** พร้อมเครื่องมือสำหรับ **ESP32-S3** รองรับทั้งระบบปฏิบัติการ **Windows, macOS และ Linux** โดยสามารถเขียนโปรแกรมและ Build ทดสอบได้โดยไม่ต้องใช้บอร์ดฮาร์ดแวร์จริง (แต่ต้องใช้บอร์ดตอนจะ Flash ลงเครื่องจริง)
+
+### 1. สิ่งที่ต้องเตรียมเบื้องต้น
+* **อินเทอร์เน็ต** (สำหรับการดาวน์โหลด Framework และ Toolchain ขนาดประมาณ 1 GB ขึ้นไป)
+* **พื้นที่ว่างในฮาร์ดดิสก์**
+* **Git** และ **Python (เวอร์ชัน 3.10 ขึ้นไป)**
+### 2. วิธีการติดตั้งตามระบบปฏิบัติการ
+#### 🪟 สำหรับผู้ใช้ Windows (แนะนำให้ใช้ Track A: ผ่าน PowerShell)
+1. **ติดตั้ง Git for Windows** และเลือกให้ใช้งานผ่าน Command Line ได้
+2. **เปิด Windows PowerShell** (ห้ามใช้ Git Bash เด็ดขาด เพราะระบบจะพังเพราะติดค่า `MSYSTEM`)
+3. **ตรวจสอบ Python และ Git:** รันคำสั่ง `python --version` และ `git --version`
+4. **ดาวน์โหลด ESP-IDF v6.1:**
+* สร้างโฟลเดอร์ เช่น `D:\dev\esp\v6.1\esp-idf`
+* ทำการ Clone โค้ดผ่าน Git: `git clone --branch v6.1 --recursive [https://github.com/espressif/esp-idf.git](https://github.com/espressif/esp-idf.git)`
+5. **ติดตั้ง Tools สำหรับ ESP32-S3:**
+* เข้าไปที่โฟลเดอร์ ESP-IDF แล้วรัน: `.\install.ps1 esp32s3`
+6. **เปิดใช้งาน (Activate) และตรวจสอบ:**
+* รันคำสั่งเปิดใช้งาน: `. .\export.ps1`
+* ตรวจสอบความถูกต้อง: `idf.py --version` (ต้องแสดงผลเป็น **v6.1**)
+
+#### 🍏🐧 สำหรับผู้ใช้ macOS และ Linux (ใช้ Terminal / Bash)
+1. **ติดตั้ง Prerequisite Packages** ของระบบปฏิบัติการนั้น ๆ และตรวจสอบ `git --version` / `python3 --version`
+2. **ดาวน์โหลด ESP-IDF v6.1:**
+* สร้างโฟลเดอร์ `mkdir -p ~/esp && cd ~/esp`
+* Clone โค้ด: `git clone --branch v6.1 --recursive [https://github.com/espressif/esp-idf.git](https://github.com/espressif/esp-idf.git)`
+3. **ติดตั้ง Tools สำหรับ ESP32-S3:**
+* รันคำสั่ง: `./install.sh esp32s3`
+4. **เปิดใช้งาน (Activate) และตรวจสอบ:**
+* รันคำสั่งเปิดใช้งาน: `. ./export.sh`
+* ตรวจสอบความถูกต้อง: `idf.py --version` (ต้องแสดงผลเป็น **v6.1**)
+
+### 3. ข้อควรระวังที่สำคัญ (Troubleshooting)
+* ⚠️ **ห้ามใช้ Git Bash บน Windows เด็ดขาด** ให้ใช้ **Windows PowerShell** เท่านั้น เนื่องจาก Espressif Toolchain ไม่รองรับสภาพแวดล้อมแบบ MSYS/MinGW
+* **เส้นทาง (Paths):** หลีกเลี่ยงการเว้นวรรค (Spaces) ในชื่อโฟลเดอร์ที่เก็บโปรเจกต์และ Framework
+* หากคำสั่ง `idf.py` ไม่รู้จัก ให้ทำการ Activate ทุกครั้งที่เปิด Terminal ใหม่ผ่านไฟล์ `export.ps1` (Windows) หรือ `export.sh` (Mac/Linux)
+
+### 4. เช็กลิสต์ความสำเร็จ (Completion Checklist)
+* [ ] ติดตั้ง Git และ Python เรียบร้อย
+* [ ] คำสั่ง `idf.py --version` แสดงเวอร์ชัน **v6.1**
+* [ ] ตัวแปร `IDF_PATH` ชี้ไปยังโฟลเดอร์ Framework ถูกต้อง
+* [ ] สามารถ Build โครงการ (เช่น Hello World) ได้สำเร็จผ่าน `idf.py build`
+* [ ] (เมื่อมีบอร์ด) สามารถ Flash และดูข้อความผ่าน Serial Monitor ได้
+นี่คือสรุปเนื้อหาคู่มือ **การตั้งค่า ESP-IDF Extension บน VS Code** (ทำหลังจากติดตั้ง ESP-IDF เรียบร้อยแล้ว) เป็นภาษาไทยแบบเข้าใจง่ายครับ
+
+### 📌 ภาพรวมสำคัญ
+หน้าต่าง Terminal และส่วนขยาย (Extension) ใน VS Code ทำงานแยกสภาพแวดล้อมกัน ดังนั้นแม้คุณจะรัน `idf.py build` ใน Terminal ได้สำเร็จ **ปุ่ม Build ใน VS Code ก็จะยังใช้งานไม่ได้** จนกว่าจะตั้งค่าให้ Extension รู้จักตำแหน่งของเครื่องมือต่าง ๆ เสียก่อน
+
+### 1. เปิดโฟลเดอร์โปรเจกต์ให้ถูกที่
+* เปิดโปรแกรม VS Code และติดตั้งส่วนขยายชื่อ **ESP-IDF by Espressif**
+* ไปที่ **File → Open Folder** แล้วเลือกโฟลเดอร์รากของตัวโปรเจกต์เฟิร์มแวร์โดยตรง (โฟลเดอร์ที่มีไฟล์ `CMakeLists.txt` และโฟลเดอร์ `main/` อยู่ข้างใน เช่น `.../esp32-s3`)
+* ⚠️ **ข้อควรระวัง:** ห้ามเปิดโฟลเดอร์ใหญ่สุดของ Repository และต้องใช้ VS Code ให้ตรงกับระบบที่ติดตั้ง (เช่น Windows VS Code คู่กับ Windows ESP-IDF หรือ VS Code WSL คู่กับ Linux ESP-IDF)
+
+### 2. ตั้งค่าสภาพแวดล้อมให้ Extension (ทำเพียงครั้งเดียว)
+เลือกทำตามวิธีที่คุณใช้ติดตั้ง ESP-IDF ในตอนแรก:
+#### 🅰️ กรณีติดตั้งผ่านตัวจัดการ EIM (Espressif Installation Manager)
+1. กด `Ctrl+Shift+P` ใน VS Code
+2. พิมพ์และเลือกคำสั่ง **ESP-IDF: Select Current ESP-IDF Version** แล้วเลือกเวอร์ชัน **v6.1**
+3. รันคำสั่ง **ESP-IDF: Doctor Command** เพื่อตรวจสอบว่า Path ของ Framework, Python, CMake และ Ninja ถูกต้องครบถ้วน
+
+#### 🅱️ กรณีติดตั้งผ่านสคริปต์ (Course Scripts)
+ต้องสร้างไฟล์ตั้งค่า `.vscode/settings.json` ในโปรเจกต์เพื่อให้ Extension รู้จักตำแหน่งเครื่องมือ (ค่าเหล่านี้เป็นของใครของมัน ห้ามก๊อปปี้ของเพื่อนมาใช้):
+1. เปิด **Windows PowerShell** (ห้ามใช้ Git Bash) ที่โฟลเดอร์โปรเจกต์ และรันคำสั่ง Activate: `..\scripts\start-esp-idf.cmd` (หรือ `. ..\scripts\start-esp-idf.ps1`)
+2. ตรวจสอบว่าเครื่องมือพร้อมใช้งานด้วยคำสั่ง `idf.py --version`, `cmake --version`, `ninja --version`
+3. รันชุดคำสั่ง PowerShell จากคู่มือเพื่อดึงค่าตัวแปร (Export Environment) และบันทึกอัตโนมัติลงในไฟล์ `.vscode\settings.json` *(สำหรับ macOS/Linux ให้รันผ่าน Bash ตามคู่มือ)*
+4. กลับมาที่ VS Code กด `Ctrl+Shift+P` เลือก **Developer: Reload Window** จากนั้นรัน **ESP-IDF: Doctor Command** เพื่อตรวจเช็กความเรียบร้อย
+
+### 3. ทดสอบ Build โปรเจกต์ผ่าน VS Code
+1. กด `Ctrl+Shift+P` เลือก **ESP-IDF: Set Espressif Device Target** แล้วเลือกชิปเป็น **`esp32s3`**
+2. กดปุ่มรูปเปลวไฟหรือรันคำสั่ง **ESP-IDF: Build your project**
+3. รอจนหน้าต่าง Output แสดงข้อความ **`Project build complete`** (จะได้ไฟล์ผลลัพธ์ชื่อ `build/hello_world.bin`)
+
+### 4. การใช้งานในวันถัดไป & การแก้ปัญหาเบื้องต้น
+* **การใช้งานประจำวัน:** เมื่อเปิดโฟลเดอร์โปรเจกต์เดิมขึ้นมา สามารถกดปุ่ม Build ใน VS Code ได้ทันทีโดยไม่ต้องตั้งค่าใหม่ (แต่ถ้าจะพิมพ์คำสั่ง `idf.py` เองใน Terminal ใหม่ ยังต้องรันสคริปต์ Launcher เพื่อ Activate เหมือนเดิม)
+* **แก้ปัญหา `cmake was not found`:** มักเกิดจาก Extension ยังหา Path ไม่เจอ ให้รัน Doctor Command เช็กดู หรือสร้างไฟล์ตั้งค่าใหม่แล้วสั่ง Reload Window
+* **แก้ปัญหาขึ้นแจ้งเตือน `Missing sdkconfig`:** ตรวจสอบว่าคุณเปิดโฟลเดอร์โปรเจกต์ถูกชั้นหรือไม่ (ต้องเป็นชั้นที่มี `CMakeLists.txt`) และลองกด Build รอบแรกเพื่อให้ระบบสร้างไฟล์ `sdkconfig` ขึ้นมาครับ
+
